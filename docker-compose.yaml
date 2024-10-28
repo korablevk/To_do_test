@@ -1,0 +1,68 @@
+version: '3.1'
+
+services:
+  postgres:
+    image: postgres:14-alpine3.17
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env-non-dev
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7.2-alpine
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./to_do_app
+      dockerfile: Dockerfile # Uses the Dockerfile in to_do_app directory
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - .env-non-dev
+    environment:
+      - POSTGRES_HOST=postgres
+    volumes:
+      - ./to_do_app:/backend
+    command: sh -c "python manage.py makemigrations && \ python manage.py migrate && \ uvicorn to_do_app.asgi:fastapp --reload" #&& \ (python manage.py createsuperuser --username admin --email admin@mail.ru --noinput || true) 
+
+  celery:
+    build:
+      context: ./to_do_app
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./to_do_app:/backend
+    env_file:
+      - .env-non-dev
+    command: sh -c "ls && celery -A to_do_app worker --loglevel=info"
+    restart: unless-stopped
+
+  tg_bot:
+    build:
+      context: ./tg_bot
+      dockerfile: Dockerfile # Uses the Dockerfile in tg_bot directory
+    depends_on:
+      - postgres
+      - redis
+      - backend
+    env_file:
+      - .env-non-dev
+    volumes:
+      - ./tg_bot:/tg_bot
+    command: [ "python", "/tg_bot/bot.py" ]
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
