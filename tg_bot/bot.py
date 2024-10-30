@@ -36,8 +36,6 @@ dp = Dispatcher(storage=storage)
 dp.callback_query.middleware(CallbackAnswerMiddleware())
 dp.startup.register(set_main_menu)
 
-# register_all_handlers(dp)
-
 
 async def on_shutdown(bot):
     logger.info('Бот лег')

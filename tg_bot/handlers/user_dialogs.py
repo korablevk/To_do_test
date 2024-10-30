@@ -27,6 +27,7 @@ else:
 dialog_router = Router()
 dialog_router.include_routers(bot_menu_dialogs)
 
+
 @dialog_router.message(Command('tasks'))
 async def begin(message: Message, dialog_manager: DialogManager):
     telegram_id = message.from_user.id

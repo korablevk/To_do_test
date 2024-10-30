@@ -4,5 +4,7 @@ LEXICON_COMMANDS: dict[str, str] = {
 }
 
 GREETING_TEXT: dict[str, str] = {
-    'greeting': 'Welcome to our bot\n'
+    'greeting': 'Welcome to our bot,\n'
+                'click the /tasks\n'
+                'command to log in\n'
 }
